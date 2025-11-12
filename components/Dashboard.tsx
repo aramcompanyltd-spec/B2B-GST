@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, ManagedUser, AccountCategory } from '../types';
@@ -310,10 +311,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     if (!activeSettings) return [];
     return transactions.map(tx => {
       const catInfo = dynamicCategories[tx.category];
+      const accountCategory = activeSettings.accountTable.find(cat => cat.name === tx.category);
       const ratio = catInfo ? catInfo.gstRatio : 0;
       
       const gstAmount = calculateGST(tx.Amount, ratio);
-      return { ...tx, gstRatio: ratio, gstAmount };
+      return { ...tx, gstRatio: ratio, gstAmount, code: accountCategory?.code || '' };
     });
   }, [transactions, activeSettings, dynamicCategories]);
 
@@ -355,6 +357,23 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
         <Header user={user} settings={settings} onSettingsClick={() => setIsSettingsOpen(true)} onAccountTableClick={() => setIsAccountTableOpen(true)} onNewTask={handleNewTask} showNewTaskButton={false} />
         <AgentDashboard user={user} onClientSelect={handleClientSelect} />
+
+        {isSettingsOpen && (
+          <SettingsModal
+            user={user}
+            settings={settings}
+            onSave={saveSettings}
+            onClose={() => setIsSettingsOpen(false)}
+          />
+        )}
+        
+        {isAccountTableOpen && (
+          <AccountTableModal
+            initialTable={activeSettings.accountTable as AccountCategory[]}
+            onSave={(newTable) => saveSettings({ accountTable: newTable })}
+            onClose={() => setIsAccountTableOpen(false)}
+          />
+        )}
       </div>
     )
   }

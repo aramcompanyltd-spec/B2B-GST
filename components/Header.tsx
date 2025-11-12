@@ -1,3 +1,4 @@
+
 import React from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, Settings } from '../types';
@@ -44,9 +45,11 @@ const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAcco
             {isAgentView ? 'Back to Client List' : 'New Task'}
           </button>
         )}
-        <button onClick={onAccountTableClick} className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 font-medium">
-          Account table
-        </button>
+        {settings.role !== 'user' && (
+            <button onClick={onAccountTableClick} className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 font-medium">
+                Account table
+            </button>
+        )}
         <button onClick={onSettingsClick} className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 font-medium">
           Settings
         </button>

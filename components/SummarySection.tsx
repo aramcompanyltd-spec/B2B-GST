@@ -66,7 +66,13 @@ const SummarySection: React.FC<SummaryProps> = ({ data, categories }) => {
       const categoryInfo = categories[tx.category];
       if (!categoryInfo) return; // Skip if category is somehow invalid
 
-      const summaryGroup: 'sales' | 'expenses' = categoryInfo.type === 'income' ? 'sales' : 'expenses';
+      let summaryGroup: 'sales' | 'expenses';
+
+      if (tx.category === 'Transfers') {
+        summaryGroup = tx.Amount > 0 ? 'sales' : 'expenses';
+      } else {
+        summaryGroup = categoryInfo.type === 'income' ? 'sales' : 'expenses';
+      }
       
       initial[summaryGroup].total += tx.Amount;
       initial[summaryGroup].gst += tx.gstAmount;

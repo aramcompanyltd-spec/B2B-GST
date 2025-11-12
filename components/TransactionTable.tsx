@@ -72,6 +72,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, categ
                         <span className="text-gray-400 w-3">{getSortIndicator('category')}</span>
                     </button>
                 </div>
+                <div className="p-2 w-24 flex-shrink-0">
+                    <button onClick={() => requestSort('code')} className="flex items-center space-x-1 w-full text-left font-medium text-xs text-gray-500 uppercase hover:text-gray-800 transition-colors">
+                        <span>Code</span>
+                        <span className="text-gray-400 w-3">{getSortIndicator('code')}</span>
+                    </button>
+                </div>
                 <div className="p-2 w-28 flex-shrink-0 text-right">
                     <button onClick={() => requestSort('Amount')} className="flex items-center space-x-1 w-full justify-end font-medium text-xs text-gray-500 uppercase hover:text-gray-800 transition-colors">
                         <span>Amount</span>
@@ -103,6 +109,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, categ
                                 ) : (
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(tx.category)}`}>{tx.category}</span>
                                 )}
+                            </div>
+                            <div className="p-2 w-24 flex-shrink-0 text-sm text-gray-600">
+                                {tx.code}
                             </div>
                             <div className={`p-2 w-28 flex-shrink-0 text-right font-mono text-sm`}>
                                 {isEditing ? <input type="number" name="Amount" value={editingRow.Amount} className="w-full p-1 bg-gray-100 border rounded text-right" disabled /> :

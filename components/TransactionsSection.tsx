@@ -61,43 +61,29 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
 
         } else {
             // Default sorting logic
-            const expenseCategoryOrder = [
-                'Purchases & Expenses Standard',
-                'Purchases & Expenses Zero',
-                'Entertainment Expenses',
-                'Motor Vehicle Expenses',
-                'Home Office Expense',
-                'Transfers',
-            ];
-            
-            const incomeCategoryOrder = [
-                'Sales Standard',
-                'Sales Zero',
-            ];
+            const sortTransactions = (a: Transaction, b: Transaction): number => {
+                const codeA = a.code || '';
+                const codeB = b.code || '';
 
-            const sortTransactions = (order: string[]) => (a: Transaction, b: Transaction): number => {
-                let aIndex = order.indexOf(a.category);
-                let bIndex = order.indexOf(b.category);
-                
-                if (a.category === 'Uncategorized') aIndex = order.length + 1;
-                if (b.category === 'Uncategorized') bIndex = order.length + 1;
-                
-                if (aIndex === -1 && a.category !== 'Uncategorized') aIndex = order.length;
-                if (bIndex === -1 && b.category !== 'Uncategorized') bIndex = order.length;
-                
-                if (aIndex < bIndex) return -1;
-                if (aIndex > bIndex) return 1;
-
-                if (aIndex === order.length) {
-                    const catCompare = a.category.localeCompare(b.category);
-                    if (catCompare !== 0) return catCompare;
+                if (codeA && codeB) {
+                    const codeCompare = codeA.localeCompare(codeB);
+                    if (codeCompare !== 0) return codeCompare;
+                } else if (codeA) {
+                    return -1; // A has code, B doesn't, A comes first
+                } else if (codeB) {
+                    return 1; // B has code, A doesn't, B comes first
                 }
 
+                // If codes are same or both are empty, sort by category name
+                const catCompare = a.category.localeCompare(b.category);
+                if (catCompare !== 0) return catCompare;
+
+                // Then by payee as a fallback
                 return a.Payee.localeCompare(b.Payee);
             };
             
-            income = income.sort(sortTransactions(incomeCategoryOrder));
-            expense = expense.sort(sortTransactions(expenseCategoryOrder));
+            income = income.sort(sortTransactions);
+            expense = expense.sort(sortTransactions);
         }
 
         return { incomeTx: income, expenseTx: expense };
@@ -150,10 +136,15 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
     };
 
     const handleDownload = (format: 'csv' | 'xlsx') => {
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
+        const filename = `gst_report_${timestamp}`;
+
         const reportData = data.map(tx => ({
             'Date': tx.Date,
             'Payee': tx.Payee,
             'Category': tx.category,
+            'Code': tx.code || '',
             'Amount': tx.Amount.toFixed(2),
             'GST Ratio': `${(tx.gstRatio! * 100).toFixed(0)}%`,
             'GST Amount': tx.gstAmount!.toFixed(2)
@@ -165,7 +156,7 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", "gst_report.csv");
+            link.setAttribute("download", `${filename}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -173,7 +164,7 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
             const worksheet = (window as any).XLSX.utils.json_to_sheet(reportData);
             const workbook = (window as any).XLSX.utils.book_new();
             (window as any).XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-            (window as any).XLSX.writeFile(workbook, "gst_report.xlsx");
+            (window as any).XLSX.writeFile(workbook, `${filename}.xlsx`);
         }
     };
 

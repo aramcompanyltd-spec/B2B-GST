@@ -12,6 +12,7 @@ export interface Transaction {
   category: string;
   gstRatio?: number;
   gstAmount?: number;
+  code?: string;
 }
 
 export interface AccountCategory {

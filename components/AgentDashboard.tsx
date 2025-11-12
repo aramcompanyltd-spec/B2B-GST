@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { db, appId } from '../services/firebase';
 import type { FirebaseUser, ManagedUser } from '../types';
 import { DEFAULT_ACCOUNT_TABLE } from '../utils/constants';
+import Pagination from './Pagination';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 interface AgentDashboardProps {
   user: FirebaseUser;
@@ -50,6 +52,9 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect })
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<ManagedUser | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
@@ -88,6 +93,26 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect })
     }
   };
 
+  const handleDeleteClient = async () => {
+    if (!clientToDelete) return;
+    try {
+        const clientRef = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('managedUsers').doc(clientToDelete.id);
+        await clientRef.delete();
+        setClientToDelete(null);
+        fetchClients(); // Refresh list after deletion
+    } catch (err) {
+        console.error("Error deleting client:", err);
+        setError("Could not delete the client. Please try again.");
+        setClientToDelete(null);
+    }
+  };
+
+  const paginatedClients = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return managedUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [managedUsers, currentPage]);
+
+
   if (isLoading) {
     return <p>Loading clients...</p>;
   }
@@ -115,19 +140,36 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect })
                 <p>Click "Add New Client" to get started.</p>
             </div>
         ) : (
-            <ul className="divide-y">
-                {managedUsers.map(client => (
-                <li key={client.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
-                    <div>
-                        <p className="font-semibold text-gray-900">{client.companyName}</p>
-                        <p className="text-sm text-gray-500">IRD: {client.irdNumber || 'N/A'}</p>
+            <>
+                <ul className="divide-y">
+                    {paginatedClients.map(client => (
+                    <li key={client.id} className="p-4 flex justify-between items-center hover:bg-gray-50">
+                        <div>
+                            <p className="font-semibold text-gray-900">{client.companyName}</p>
+                            <p className="text-sm text-gray-500">IRD: {client.irdNumber || 'N/A'}</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <button onClick={() => onClientSelect(client)} className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600">
+                                Start New GST Task
+                            </button>
+                            <button onClick={() => setClientToDelete(client)} className="bg-red-500 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-600">
+                                Delete
+                            </button>
+                        </div>
+                    </li>
+                    ))}
+                </ul>
+                {managedUsers.length > ITEMS_PER_PAGE && (
+                    <div className="p-4 border-t">
+                        <Pagination 
+                            currentPage={currentPage}
+                            totalItems={managedUsers.length}
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
-                    <button onClick={() => onClientSelect(client)} className="bg-green-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-600">
-                        Start New GST Task
-                    </button>
-                </li>
-                ))}
-            </ul>
+                )}
+            </>
         )}
       </div>
 
@@ -135,6 +177,14 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect })
         <AddClientModal
           onClose={() => setShowAddModal(false)}
           onSave={handleAddClient}
+        />
+      )}
+      {clientToDelete && (
+        <DeleteConfirmationModal
+            title="Confirm Client Deletion"
+            message={`Are you sure you want to delete this client (${clientToDelete.companyName})? All associated data will be permanently removed.`}
+            onConfirm={handleDeleteClient}
+            onCancel={() => setClientToDelete(null)}
         />
       )}
     </div>
