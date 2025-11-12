@@ -1,4 +1,5 @@
 
+
 import React, { useState, PropsWithChildren } from 'react';
 import AuthScreen from './AuthScreen';
 
@@ -23,8 +24,8 @@ const NavHeader = ({ onSignIn, onSignUp, onGoHome, onNavClick }: { onSignIn: () 
 );
 
 const Hero = ({ onSignUp }: { onSignUp: () => void; }) => (
-    <section className="relative text-white py-20 md:py-32" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554224155-1696413565d3?q=80&w=2670&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <div className="absolute inset-0 bg-black opacity-50"></div>
+    <section className="relative text-white py-20 md:py-32" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2684&auto=format&fit=crop')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="relative container mx-auto px-6 text-center">
             <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Complex NZ GST filing is a thing of the past.</h1>
             <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto mb-8">
