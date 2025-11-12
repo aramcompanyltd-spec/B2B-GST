@@ -1,0 +1,5 @@
+{
+  "name": "NZ GST 다중화일 - 회계법인용",
+  "description": "An intelligent web application to process bank statements from CSV/XLSX files, automatically categorize transactions, and calculate GST returns for New Zealand businesses. Features user management for admins.",
+  "requestFramePermissions": []
+}
