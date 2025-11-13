@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, ManagedUser, AccountCategory } from '../types';
@@ -260,22 +261,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 [...prev, ...classified].filter((v,i,a)=>a.findIndex(t=>(t.id === v.id))===i)
             );
 
-            // Credits and upload count are always tied to the logged-in user (agent or user)
-            const newUploadCount = (settings.uploadCount || 0) + 1;
-            const currentCredits = settings.credits ?? 0;
-            const newCreditCount = !isAdmin ? Math.max(0, currentCredits - 1) : currentCredits;
-            setSettings(s => s ? ({ ...s, uploadCount: newUploadCount, credits: newCreditCount }) : null);
-            
+            // Credits and upload count are always tied to the logged-in user (agent or user).
+            // Use a Firestore transaction for this read-modify-write operation to prevent race conditions
+            // and ensure updates are based on the latest server data, which avoids security rule violations.
             const userRef = db.collection('artifacts').doc(appId).collection('users').doc(user.uid);
-            const updatePayload: { uploadCount: number; credits?: number } = {
-                uploadCount: newUploadCount,
-            };
-            if (!isAdmin) {
-                updatePayload.credits = newCreditCount;
-            }
+            db.runTransaction(async (transaction) => {
+              const userDoc = await transaction.get(userRef);
+              if (!userDoc.exists) {
+                throw new Error("User document not found. Cannot update stats.");
+              }
 
-            userRef.update(updatePayload).catch(err => {
+              const userData = userDoc.data() as Settings;
+              const newUploadCount = (userData.uploadCount || 0) + 1;
+              const currentCredits = userData.credits ?? 0;
+              const newCreditCount = !isAdmin ? Math.max(0, currentCredits - 1) : currentCredits;
+              
+              transaction.update(userRef, {
+                uploadCount: newUploadCount,
+                credits: newCreditCount,
+              });
+
+              return { newUploadCount, newCreditCount };
+            })
+            .then((newCounts) => {
+              if (newCounts) {
+                // Update local state only after the transaction is successfully committed.
+                setSettings(s => s ? { ...s, uploadCount: newCounts.newUploadCount, credits: newCounts.newCreditCount } : null);
+              }
+            })
+            .catch(err => {
               console.error("Failed to update user stats:", err);
+              setError("Failed to save usage data. Please refresh and check your credits.");
             });
           }
           setIsLoading(false);
@@ -356,7 +372,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     return (
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
         <Header user={user} settings={settings} onSettingsClick={() => setIsSettingsOpen(true)} onAccountTableClick={() => setIsAccountTableOpen(true)} onNewTask={handleNewTask} showNewTaskButton={false} />
-        <AgentDashboard user={user} onClientSelect={handleClientSelect} />
+        <AgentDashboard user={user} onClientSelect={handleClientSelect} settings={settings} />
 
         {isSettingsOpen && (
           <SettingsModal
@@ -377,6 +393,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       </div>
     )
   }
+  
+  const clientName = selectedClient?.companyName || settings?.profile?.name || user.email || 'user';
 
   // Main Calculator / Admin View
   return (
@@ -415,7 +433,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </>
           ) : (
             <div className="space-y-8 mt-6">
-              <SummarySection data={processedData} categories={dynamicCategories} />
+              <SummarySection data={processedData} categories={dynamicCategories} accountTable={activeSettings.accountTable as AccountCategory[]} clientName={clientName} />
               <TransactionsSection 
                 data={processedData}
                 categories={Object.keys(dynamicCategories)}
@@ -424,6 +442,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                 saveSettings={saveSettings}
                 settings={{...activeSettings} as Settings}
                 requestDelete={setTransactionToDelete}
+                clientName={clientName}
               />
               <GstReturnSection data={processedData} />
             </div>

@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { db, appId } from '../services/firebase';
-import type { FirebaseUser, ManagedUser } from '../types';
-import { DEFAULT_ACCOUNT_TABLE } from '../utils/constants';
+import type { FirebaseUser, ManagedUser, Settings } from '../types';
 import Pagination from './Pagination';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 interface AgentDashboardProps {
   user: FirebaseUser;
   onClientSelect: (client: ManagedUser) => void;
+  settings: Settings;
 }
 
 const AddClientModal: React.FC<{
@@ -47,7 +47,7 @@ const AddClientModal: React.FC<{
   );
 };
 
-const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect }) => {
+const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect, settings }) => {
   const [managedUsers, setManagedUsers] = useState<ManagedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -80,7 +80,7 @@ const AgentDashboard: React.FC<AgentDashboardProps> = ({ user, onClientSelect })
         companyName: companyName || `Client (IRD: ${irdNumber})`,
         irdNumber,
         mapping: {},
-        accountTable: DEFAULT_ACCOUNT_TABLE,
+        accountTable: settings.accountTable,
     };
     try {
         const clientsRef = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('managedUsers');

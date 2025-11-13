@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 // FIX: Using Firebase v8 compat syntax, imports are no longer needed here.
 import { db, auth, appId } from '../services/firebase';
@@ -14,9 +15,10 @@ interface TransactionsSectionProps {
     saveSettings: (settings: Settings) => Promise<void>;
     settings: Settings;
     requestDelete: (transaction: Transaction) => void;
+    clientName: string;
 }
 
-const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categories, updateTransaction, setTransactions, saveSettings, settings, requestDelete }) => {
+const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categories, updateTransaction, setTransactions, saveSettings, settings, requestDelete, clientName }) => {
     const [selected, setSelected] = useState<string[]>([]);
     const [activeTable, setActiveTable] = useState<'expenses' | 'income'>('expenses');
     const [currentPage, setCurrentPage] = useState(1);
@@ -138,7 +140,8 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
     const handleDownload = (format: 'csv' | 'xlsx') => {
         const now = new Date();
         const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
-        const filename = `gst_report_${timestamp}`;
+        const safeClientName = clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const filename = `${safeClientName}_gst_report_${timestamp}`;
 
         const reportData = data.map(tx => ({
             'Date': tx.Date,
