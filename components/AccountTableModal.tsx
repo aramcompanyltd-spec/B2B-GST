@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import type { AccountCategory } from '../types';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 interface AccountTableModalProps {
   initialTable: AccountCategory[];
   onSave: (newTable: AccountCategory[]) => void;
   onClose: () => void;
+  agentDefaultTable?: AccountCategory[];
 }
 
-const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onSave, onClose }) => {
+const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onSave, onClose, agentDefaultTable }) => {
   const [table, setTable] = useState<AccountCategory[]>(() => JSON.parse(JSON.stringify(initialTable)));
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editedRow, setEditedRow] = useState<AccountCategory | null>(null);
   const [saveFeedback, setSaveFeedback] = useState('');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleAddNew = () => {
     const newCategory: AccountCategory = {
@@ -64,6 +68,13 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
     setTimeout(() => {
         setSaveFeedback('');
     }, 2000);
+  };
+
+  const handleResetToDefault = () => {
+    if (agentDefaultTable) {
+      setTable(JSON.parse(JSON.stringify(agentDefaultTable)));
+    }
+    setShowResetConfirm(false);
   };
 
   const headers = ['Category Name', 'Type', 'GST Ratio (%)', 'Code', 'Actions'];
@@ -146,13 +157,33 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
         </div>
 
         <div className="p-6 border-t flex justify-between items-center">
-          <button onClick={handleAddNew} className="text-sm text-blue-600 hover:underline font-semibold">+ Add New Category</button>
+          <div>
+            <button onClick={handleAddNew} className="text-sm text-blue-600 hover:underline font-semibold">+ Add New Category</button>
+            {agentDefaultTable && (
+                <button
+                    onClick={() => setShowResetConfirm(true)}
+                    className="ml-4 text-sm text-orange-600 hover:underline font-semibold"
+                >
+                    Reset to Agent's Default
+                </button>
+            )}
+          </div>
           <div className="flex items-center space-x-4">
             {saveFeedback && <span className="text-sm text-green-600 transition-opacity duration-300">{saveFeedback}</span>}
             <button onClick={handleSave} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-bold">Save Changes</button>
             <button onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Close</button>
           </div>
         </div>
+        {showResetConfirm && (
+          <DeleteConfirmationModal
+            title="Confirm Reset"
+            message="Are you sure you want to reset this client's account table to the agent's default? Any custom changes will be lost."
+            onConfirm={handleResetToDefault}
+            onCancel={() => setShowResetConfirm(false)}
+            confirmText="Reset"
+            confirmColor="bg-orange-500 hover:bg-orange-600"
+          />
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, ManagedUser, AccountCategory } from '../types';
@@ -101,9 +100,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 
   const activeSettings = useMemo(() => {
     if (selectedClient) {
+      const clientTable = selectedClient.accountTable && selectedClient.accountTable.length > 0
+        ? selectedClient.accountTable
+        : settings?.accountTable; // Use agent's table if client's is missing or empty
+
       return {
         mapping: selectedClient.mapping,
-        accountTable: selectedClient.accountTable || DEFAULT_ACCOUNT_TABLE,
+        accountTable: clientTable || DEFAULT_ACCOUNT_TABLE,
       };
     }
     return settings;
@@ -465,6 +468,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           initialTable={activeSettings.accountTable as AccountCategory[]}
           onSave={(newTable) => saveSettings({ accountTable: newTable })}
           onClose={() => setIsAccountTableOpen(false)}
+          agentDefaultTable={settings.role === 'agent' && selectedClient ? settings.accountTable : undefined}
         />
       )}
 
