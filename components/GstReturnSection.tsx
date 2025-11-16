@@ -18,12 +18,12 @@ const ReturnLine: React.FC<ReturnLineProps> = ({ label, amount, note, highlight,
     const finalClass = isFinal ? (amount >= 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800') : '';
     const oddClass = isOdd && !highlight && !isFinal ? 'bg-gray-50' : '';
     return (
-        <div className={`flex justify-between items-center py-3 px-4 rounded-md ${highlight ? 'bg-blue-50' : ''} ${finalClass} ${oddClass}`}>
-            <div>
+        <div className={`grid grid-cols-3 gap-4 items-center py-3 px-4 rounded-md ${highlight ? 'bg-blue-50' : ''} ${finalClass} ${oddClass}`}>
+            <div className="col-span-2">
                 <p className="font-semibold">{label}</p>
                 {note && <p className="text-xs text-gray-500">{note}</p>}
             </div>
-            <p className={`font-mono text-lg font-bold ${!isFinal ? 'text-gray-900' : ''} ${highlight || isFinal ? 'text-xl' : ''}`}>
+            <p className={`font-mono text-lg font-bold text-left ${!isFinal ? 'text-gray-900' : ''} ${highlight || isFinal ? 'text-xl' : ''}`}>
                 ${Math.abs(amount).toFixed(2)}
             </p>
         </div>

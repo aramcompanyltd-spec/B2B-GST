@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, Settings } from '../types';
@@ -10,12 +11,14 @@ interface HeaderProps {
   onSettingsClick: () => void;
   onAccountTableClick: () => void;
   onNewTask: () => void;
+  onNewClientTask?: () => void;
   showNewTaskButton: boolean;
+  showNewClientTaskButton?: boolean;
   isAgentView?: boolean;
   clientName?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAccountTableClick, onNewTask, showNewTaskButton, isAgentView, clientName }) => {
+const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAccountTableClick, onNewTask, onNewClientTask, showNewTaskButton, showNewClientTaskButton, isAgentView, clientName }) => {
   const greeting = clientName ? `Client: ${clientName}` : `Welcome, ${user.email || 'Guest'}`;
 
   return (
@@ -40,6 +43,11 @@ const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAcco
         </div>
       </div>
       <div className="flex items-center space-x-4">
+        {showNewClientTaskButton && onNewClientTask && (
+            <button onClick={onNewClientTask} className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                New Task
+            </button>
+        )}
         {showNewTaskButton && (
           <button onClick={onNewTask} className="text-sm bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
             {isAgentView ? 'Back to Client List' : 'New Task'}

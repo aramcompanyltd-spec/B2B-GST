@@ -137,7 +137,7 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
         setBulkCategory('');
     };
 
-    const handleDownload = (format: 'csv' | 'xlsx') => {
+    const handleDownload = (format: 'csv') => {
         const now = new Date();
         const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
         const safeClientName = clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -163,11 +163,6 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        } else if (format === 'xlsx') {
-            const worksheet = (window as any).XLSX.utils.json_to_sheet(reportData);
-            const workbook = (window as any).XLSX.utils.book_new();
-            (window as any).XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-            (window as any).XLSX.writeFile(workbook, `${filename}.xlsx`);
         }
     };
 
@@ -179,8 +174,15 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
                     <button onClick={() => setActiveTable('income')} className={`px-4 py-2 text-sm font-medium ${activeTable === 'income' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}>Sales & Income ({incomeTx.length})</button>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <button onClick={() => handleDownload('csv')} className="text-sm bg-gray-200 px-3 py-1.5 rounded-md hover:bg-gray-300">CSV Download</button>
-                    <button onClick={() => handleDownload('xlsx')} className="text-sm bg-gray-200 px-3 py-1.5 rounded-md hover:bg-gray-300">Excel Download</button>
+                    <button 
+                        onClick={() => handleDownload('csv')} 
+                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 font-semibold flex items-center space-x-2 shadow-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        <span>CSV Download</span>
+                    </button>
                 </div>
             </div>
 

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, ManagedUser, AccountCategory } from '../types';
@@ -116,9 +117,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const dynamicCategories = useMemo(() => {
     if (!activeSettings?.accountTable) return {};
     return activeSettings.accountTable.reduce((acc, cat) => {
-      acc[cat.name] = { gstRatio: cat.ratio, type: cat.type };
+      acc[cat.name] = { gstRatio: cat.ratio };
       return acc;
-    }, {} as { [key: string]: { gstRatio: number; type: 'income' | 'expense' } });
+    }, {} as { [key: string]: { gstRatio: number } });
   }, [activeSettings]);
 
   const saveSettings = useCallback(async (newSettings: Partial<Settings | ManagedUser>) => {
@@ -217,18 +218,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
                     return rowObject;
                 });
             } else {
-                const workbook = (window as any).XLSX.read(data, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-
-                const rawData: any[][] = (window as any).XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", blankrows: false });
-                const headerRowIndex = findHeaderRowIndex(rawData as string[][]);
-
-                if (headerRowIndex === -1) {
-                    throw new Error(`Could not find a valid transaction header row. Please ensure the file contains columns like 'Date' and '${bankConfig.amountField}'.`);
-                }
-                
-                rows = (window as any).XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex });
+                throw new Error(`Unsupported file type: ${file.name}. Please upload a CSV file.`);
             }
 
             const parsedData = rows.map((row, index) => {
@@ -345,6 +335,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     }
   };
 
+  const handleNewClientTask = () => {
+    setTransactions([]);
+    setError('');
+  };
+
   const handleDismissOnboarding = () => {
     setShowOnboarding(false);
     localStorage.setItem('hasSeenOnboarding', 'true');
@@ -398,6 +393,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   }
   
   const clientName = selectedClient?.companyName || settings?.profile?.name || user.email || 'user';
+  const showNewClientTaskButton = settings.role === 'agent' && !!selectedClient && transactions.length > 0;
 
   // Main Calculator / Admin View
   return (
@@ -408,7 +404,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         onSettingsClick={() => setIsSettingsOpen(true)}
         onAccountTableClick={() => setIsAccountTableOpen(true)}
         onNewTask={handleNewTask} 
+        onNewClientTask={handleNewClientTask}
         showNewTaskButton={transactions.length > 0 || !!selectedClient}
+        showNewClientTaskButton={showNewClientTaskButton}
         isAgentView={settings.role === 'agent'}
         clientName={selectedClient?.companyName}
       />
@@ -436,7 +434,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             </>
           ) : (
             <div className="space-y-8 mt-6">
-              <SummarySection data={processedData} categories={dynamicCategories} accountTable={activeSettings.accountTable as AccountCategory[]} clientName={clientName} />
+              <SummarySection data={processedData} accountTable={activeSettings.accountTable as AccountCategory[]} clientName={clientName} />
               <TransactionsSection 
                 data={processedData}
                 categories={Object.keys(dynamicCategories)}

@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import type { AccountCategory } from '../types';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
@@ -23,7 +24,6 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
       name: 'New Category',
       ratio: 1.0,
       code: '',
-      type: 'expense',
       isDeletable: true,
     };
     setTable(prev => [...prev, newCategory]);
@@ -77,7 +77,19 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
     setShowResetConfirm(false);
   };
 
-  const headers = ['Category Name', 'Type', 'GST Ratio (%)', 'Code', 'Actions'];
+  const headers = ['Category Name', 'Code', 'GST Ratio (%)', 'Actions'];
+
+  const sortedTable = useMemo(() => {
+    return [...table].sort((a, b) => {
+        const codeA = a.code || '';
+        const codeB = b.code || '';
+        
+        const codeComparison = codeA.localeCompare(codeB);
+        if (codeComparison !== 0) return codeComparison;
+
+        return a.name.localeCompare(b.name);
+    });
+  }, [table]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -95,7 +107,7 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
               </tr>
             </thead>
             <tbody>
-              {table.map(row => {
+              {sortedTable.map(row => {
                 const isEditing = editingRowId === row.id;
                 const currentRow = isEditing ? editedRow : row;
 
@@ -112,12 +124,9 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
                     </td>
                     <td className="p-3">
                       {isEditing ? (
-                        <select value={currentRow.type} onChange={e => handleEditChange('type', e.target.value)} className="w-full p-1 border rounded capitalize">
-                          <option value="income">income</option>
-                          <option value="expense">expense</option>
-                        </select>
+                        <input type="text" value={currentRow.code} onChange={e => handleEditChange('code', e.target.value)} className="w-24 p-1 border rounded" />
                       ) : (
-                        <span className={`px-2 py-1 text-xs rounded-full capitalize ${row.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{row.type}</span>
+                        <span className="text-gray-800">{row.code || '-'}</span>
                       )}
                     </td>
                     <td className="p-3">
@@ -125,13 +134,6 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
                         <input type="number" value={(currentRow.ratio * 100).toFixed(0)} onChange={e => handleEditChange('ratio', e.target.value)} className="w-20 p-1 border rounded" />
                       ) : (
                         <span className="text-gray-800">{(row.ratio * 100).toFixed(0)}%</span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      {isEditing ? (
-                        <input type="text" value={currentRow.code} onChange={e => handleEditChange('code', e.target.value)} className="w-24 p-1 border rounded" />
-                      ) : (
-                        <span className="text-gray-800">{row.code || '-'}</span>
                       )}
                     </td>
                     <td className="p-3">

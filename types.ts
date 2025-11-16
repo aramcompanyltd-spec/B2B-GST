@@ -20,7 +20,6 @@ export interface AccountCategory {
   name: string;
   ratio: number; // Stored as a float, e.g., 0.15 for 15%
   code: string;
-  type: 'income' | 'expense';
   isDeletable: boolean; // Core categories might not be deletable
 }
 

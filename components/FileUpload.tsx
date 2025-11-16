@@ -78,7 +78,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onProcess, isLoading, error }) 
              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16.5V9.75m0 0l-3.75 3.75M12 9.75l3.75 3.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-2xl font-bold mt-4">File Upload</h2>
-          <p className="text-gray-500 mt-1">Upload your bank transaction CSV/XLSX files (max 10).</p>
+          <p className="text-gray-500 mt-1">Upload your bank transaction CSV files (max 10).</p>
         </div>
         <div className="space-y-4">
           {fileSlots.map((slot, index) => (
@@ -107,7 +107,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onProcess, isLoading, error }) 
                 {
                   // FIX: The ref callback for a DOM element must not return a value. Using a block body `{...}` ensures an implicit `void` return.
                 }
-                <input type="file" className="hidden" accept=".csv,.xlsx" ref={el => { fileInputRefs.current[slot.id] = el; }} onChange={(e) => handleFileChange(slot.id, e.target.files?.[0])} disabled={!slot.bank} />
+                <input type="file" className="hidden" accept=".csv" ref={el => { fileInputRefs.current[slot.id] = el; }} onChange={(e) => handleFileChange(slot.id, e.target.files?.[0])} disabled={!slot.bank} />
                 <div onClick={() => triggerFileSelect(slot.id)} className={`w-full text-center p-6 border-2 border-dashed rounded-md ${slot.bank ? 'cursor-pointer hover:border-blue-500' : 'cursor-not-allowed'} ${dragOverId === slot.id ? 'border-blue-500 bg-blue-100' : 'border-gray-300'}`}>
                   <p className={`truncate text-sm ${slot.file ? 'text-gray-800 font-semibold' : 'text-gray-400'}`}>
                     {slot.file ? slot.file.name : (slot.bank ? 'Click to select or drop file here...' : <span className="font-bold">Please select a bank first.</span>)}
