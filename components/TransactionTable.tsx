@@ -68,7 +68,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, categ
                 </div>
                 <div className="p-2 w-48 flex-shrink-0">
                     <button onClick={() => requestSort('category')} className="flex items-center space-x-1 w-full text-left font-medium text-xs text-gray-500 uppercase hover:text-gray-800 transition-colors">
-                        <span>Category</span>
+                        <span>Account</span>
                         <span className="text-gray-400 w-3">{getSortIndicator('category')}</span>
                     </button>
                 </div>

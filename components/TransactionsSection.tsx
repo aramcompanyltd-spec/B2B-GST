@@ -142,8 +142,15 @@ const TransactionsSection: React.FC<TransactionsSectionProps> = ({ data, categor
         const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}`;
         const safeClientName = clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const filename = `${safeClientName}_gst_report_${timestamp}`;
+        
+        const sortedData = [...data].sort((a, b) => {
+            // Use a very high character for empty codes to push them to the end.
+            const codeA = a.code || '\uFFFF'; 
+            const codeB = b.code || '\uFFFF';
+            return String(codeA).localeCompare(String(codeB), undefined, { numeric: true });
+        });
 
-        const reportData = data.map(tx => ({
+        const reportData = sortedData.map(tx => ({
             'Date': tx.Date,
             'Payee': tx.Payee,
             'Category': tx.category,

@@ -21,7 +21,7 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
   const handleAddNew = () => {
     const newCategory: AccountCategory = {
       id: crypto.randomUUID(),
-      name: 'New Category',
+      name: 'New Account',
       ratio: 1.0,
       code: '',
       isDeletable: true,
@@ -77,7 +77,7 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
     setShowResetConfirm(false);
   };
 
-  const headers = ['Category Name', 'Code', 'GST Ratio (%)', 'Actions'];
+  const headers = ['Account', 'Code', 'GST Ratio (%)', 'Actions'];
 
   const sortedTable = useMemo(() => {
     return [...table].sort((a, b) => {
@@ -160,7 +160,7 @@ const AccountTableModal: React.FC<AccountTableModalProps> = ({ initialTable, onS
 
         <div className="p-6 border-t flex justify-between items-center">
           <div>
-            <button onClick={handleAddNew} className="text-sm text-blue-600 hover:underline font-semibold">+ Add New Category</button>
+            <button onClick={handleAddNew} className="text-sm text-blue-600 hover:underline font-semibold">+ Add New Account</button>
             {agentDefaultTable && (
                 <button
                     onClick={() => setShowResetConfirm(true)}

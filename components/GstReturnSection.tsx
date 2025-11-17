@@ -36,8 +36,10 @@ const GstReturnSection: React.FC<GstReturnProps> = ({ data }) => {
         
         data.forEach(tx => {
             if (tx.Amount > 0) { // Sales / Income
-                totalSales += tx.Amount;
-                if (tx.gstRatio === 0) {
+                if (tx.category !== 'Transfers') {
+                    totalSales += tx.Amount;
+                }
+                if (tx.category === 'Sales - Zero Rated') {
                     zeroRatedSales += tx.Amount;
                 }
                 gstCollected += tx.gstAmount || 0;

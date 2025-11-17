@@ -1,5 +1,4 @@
 
-
 import React, { useMemo } from 'react';
 import type { AccountCategory } from '../types';
 
@@ -32,28 +31,36 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ title, items, totals, heade
         <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
         {headerContent}
       </div>
-      <table className="w-full text-sm min-w-[600px]">
+      <table className="w-full text-sm table-fixed">
+        <colgroup>
+            <col className="w-1/3" />
+            <col className="w-1/12" />
+            <col className="w-1/6" />
+            <col className="w-1/12" />
+            <col className="w-1/6" />
+            <col className="w-1/6" />
+        </colgroup>
         <thead>
           <tr className="border-b bg-gray-50">
             <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Account</th>
             <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Code</th>
-            <th className="text-right font-medium text-gray-500 py-2 px-2 uppercase">Total</th>
-            <th className="text-right font-medium text-gray-500 py-2 px-2 uppercase">GST %</th>
-            <th className="text-right font-medium text-gray-500 py-2 px-2 uppercase">Actual</th>
-            <th className="text-right font-medium text-gray-500 py-2 px-2 uppercase">GST</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Total Amount</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Business %</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Business Amount</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">GST</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
             <tr key={item.name} className="odd:bg-white even:bg-gray-50 border-b">
-              <td className="py-2 px-2 text-gray-900 font-medium">{item.name}</td>
+              <td className="py-2 px-2 text-gray-900 font-medium truncate" title={item.name}>{item.name}</td>
               <td className="py-2 px-2 text-gray-600">{item.code}</td>
-              <td className="text-right py-2 px-2 text-gray-900 font-mono">${item.total.toFixed(2)}</td>
-              <td className="text-right py-2 px-2 text-gray-600">{(item.gstRatio * 100).toFixed(0)}%</td>
-              <td className="text-right py-2 px-2 text-gray-900 font-mono">
+              <td className="text-left py-2 px-2 text-gray-900 font-mono">${item.total.toFixed(2)}</td>
+              <td className="text-left py-2 px-2 text-gray-600">{(item.gstRatio * 100).toFixed(0)}%</td>
+              <td className="text-left py-2 px-2 text-gray-900 font-mono">
                 {`$${item.actual.toFixed(2)}`}
               </td>
-              <td className="text-right py-2 px-2 text-gray-900 font-mono">
+              <td className="text-left py-2 px-2 text-gray-900 font-mono">
                 {item.gst > 0 ? `$${item.gst.toFixed(2)}` : '-'}
               </td>
             </tr>
@@ -62,10 +69,10 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ title, items, totals, heade
         <tfoot>
           <tr className="border-t-2 font-bold bg-gray-100">
             <td colSpan={2} className="py-2 px-2 text-gray-900 uppercase">Total</td>
-            <td className="text-right py-2 px-2 text-gray-900 font-mono">${totals.total.toFixed(2)}</td>
+            <td className="text-left py-2 px-2 text-gray-900 font-mono">${totals.total.toFixed(2)}</td>
             <td className="py-2 px-2"></td>
-            <td className="text-right py-2 px-2 text-gray-900 font-mono">${totals.actual.toFixed(2)}</td>
-            <td className="text-right py-2 px-2 text-gray-900 font-mono">${totals.gst.toFixed(2)}</td>
+            <td className="text-left py-2 px-2 text-gray-900 font-mono">${totals.actual.toFixed(2)}</td>
+            <td className="text-left py-2 px-2 text-gray-900 font-mono">${totals.gst.toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>
