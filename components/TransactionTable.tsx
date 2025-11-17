@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import type { Transaction } from '../types';
 import { getCategoryColor, formatDateForDisplay } from '../utils/helpers';
@@ -78,14 +79,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, categ
                         <span className="text-gray-400 w-3">{getSortIndicator('code')}</span>
                     </button>
                 </div>
-                <div className="p-2 w-28 flex-shrink-0 text-right">
-                    <button onClick={() => requestSort('Amount')} className="flex items-center space-x-1 w-full justify-end font-medium text-xs text-gray-500 uppercase hover:text-gray-800 transition-colors">
+                <div className="p-2 w-28 flex-shrink-0 text-left">
+                    <button onClick={() => requestSort('Amount')} className="flex items-center space-x-1 w-full justify-start font-medium text-xs text-gray-500 uppercase hover:text-gray-800 transition-colors">
                         <span>Amount</span>
                         <span className="text-gray-400 w-3">{getSortIndicator('Amount')}</span>
                     </button>
                 </div>
-                <div className="p-2 w-20 flex-shrink-0 text-right">GST %</div>
-                <div className="p-2 w-24 flex-shrink-0 text-right">GST Amt</div>
+                <div className="p-2 w-20 flex-shrink-0 text-left">GST %</div>
+                <div className="p-2 w-24 flex-shrink-0 text-left">GST Amt</div>
                 <div className="p-2 w-24 text-center">Actions</div>
             </div>
             <div>
@@ -113,23 +114,39 @@ const TransactionTable: React.FC<TransactionTableProps> = ({ transactions, categ
                             <div className="p-2 w-24 flex-shrink-0 text-sm text-gray-600">
                                 {tx.code}
                             </div>
-                            <div className={`p-2 w-28 flex-shrink-0 text-right font-mono text-sm`}>
-                                {isEditing ? <input type="number" name="Amount" value={editingRow.Amount} className="w-full p-1 bg-gray-100 border rounded text-right" disabled /> :
+                            <div className={`p-2 w-28 flex-shrink-0 text-left font-mono text-sm`}>
+                                {isEditing ? <input type="number" name="Amount" value={editingRow.Amount} className="w-full p-1 bg-gray-100 border rounded text-left" disabled /> :
                                     <span className={tx.Amount > 0 ? 'text-green-600' : 'text-red-600'}>${Math.abs(tx.Amount).toFixed(2)}</span>
                                 }
                             </div>
-                            <div className="p-2 w-20 flex-shrink-0 text-right text-sm text-gray-600">{(tx.gstRatio! * 100).toFixed(0)}%</div>
-                            <div className="p-2 w-24 flex-shrink-0 text-right text-sm font-mono text-gray-800">${tx.gstAmount!.toFixed(2)}</div>
+                            <div className="p-2 w-20 flex-shrink-0 text-left text-sm text-gray-600">{(tx.gstRatio! * 100).toFixed(0)}%</div>
+                            <div className="p-2 w-24 flex-shrink-0 text-left text-sm font-mono text-gray-800">${tx.gstAmount!.toFixed(2)}</div>
                             <div className="p-2 w-24 text-center flex items-center justify-center space-x-2">
                                 {isEditing ? (
                                     <>
-                                        <button onClick={handleSaveEdit} className="text-green-600 hover:text-green-800">✓</button>
-                                        <button onClick={handleCancelEdit} className="text-red-600 hover:text-red-800">×</button>
+                                        <button onClick={handleSaveEdit} className="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-100 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                        <button onClick={handleCancelEdit} className="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
                                     </>
                                 ) : (
                                     <>
-                                        <button onClick={() => handleStartEdit(tx)} className="text-blue-600 hover:text-blue-800">✏️</button>
-                                        <button onClick={() => requestDelete(tx)} className="text-red-600 hover:text-red-800">🗑️</button>
+                                        <button onClick={() => handleStartEdit(tx)} className="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-100 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" />
+                                            </svg>
+                                        </button>
+                                        <button onClick={() => requestDelete(tx)} className="text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-100 transition-colors">
+                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
                                     </>
                                 )}
                             </div>

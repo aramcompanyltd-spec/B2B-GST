@@ -1,4 +1,5 @@
 
+
 import React, { useMemo } from 'react';
 import type { AccountCategory } from '../types';
 
@@ -33,21 +34,21 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ title, items, totals, heade
       </div>
       <table className="w-full text-sm table-fixed">
         <colgroup>
-            <col className="w-1/3" />
+            <col className="w-1/4" />
             <col className="w-1/12" />
             <col className="w-1/6" />
-            <col className="w-1/12" />
+            <col className="w-1/6" />
             <col className="w-1/6" />
             <col className="w-1/6" />
         </colgroup>
         <thead>
           <tr className="border-b bg-gray-50">
-            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Account</th>
-            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Code</th>
-            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Total Amount</th>
-            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Business %</th>
-            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">Business Amount</th>
-            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase">GST</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase whitespace-nowrap">Account</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase whitespace-nowrap">Code</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase whitespace-nowrap">Total Amount</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase whitespace-nowrap">GST ratio %</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase whitespace-nowrap">Actual Amount</th>
+            <th className="text-left font-medium text-gray-500 py-2 px-2 uppercase whitespace-nowrap">GST</th>
           </tr>
         </thead>
         <tbody>
@@ -104,9 +105,11 @@ const SummarySection: React.FC<SummaryProps> = ({ data, accountTable, clientName
     Object.entries(intermediateSummaries).forEach(([name, summary]) => {
         const isSale = summary.total > 0;
         const totalAmount = Math.abs(summary.total);
-        // Correct calculation for Actual/GST Exclusive amount
-        const gstAmount = totalAmount * (3 / 23) * summary.gstRatio;
-        const actualAmount = totalAmount - gstAmount;
+        
+        // Per user request, Actual Amount is the business portion of the total amount.
+        const actualAmount = totalAmount * summary.gstRatio;
+        // The GST is calculated from this business portion.
+        const gstAmount = actualAmount * (3 / 23);
         
         const row: SummaryRow = { name, code: summary.code, total: totalAmount, gstRatio: summary.gstRatio, actual: actualAmount, gst: gstAmount };
         
