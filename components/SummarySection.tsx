@@ -140,6 +140,7 @@ const SummarySection: React.FC<SummaryProps> = ({ data, accountTable, clientName
     let journalEntries: { Account: string; Code: string; Debit: number; Credit: number }[] = [];
     let totalDebit = 0;
     let totalCredit = 0;
+    let drawingsEntry: { Account: string; Code: string; Debit: number; Credit: number } | null = null;
 
     const summaries: { [key: string]: { total: number; code: string; gstRatio: number } } = {};
     data.forEach(tx => {
@@ -157,8 +158,19 @@ const SummarySection: React.FC<SummaryProps> = ({ data, accountTable, clientName
     Object.entries(summaries).forEach(([categoryName, summary]) => {
         const { total, code, gstRatio } = summary;
         
-        const gstAmount = Math.abs(total) * (3 / 23) * gstRatio;
-        const exclusiveAmount = Math.abs(total) - gstAmount;
+        const totalAmount = Math.abs(total);
+        let exclusiveAmount;
+
+        if (gstRatio === 0) {
+            exclusiveAmount = totalAmount;
+        } else {
+            // "Actual amount" is the business-claimable portion of the total amount.
+            const actualAmount = totalAmount * gstRatio;
+            // The GST is calculated from this business portion.
+            const gstOnActual = actualAmount * (3 / 23);
+            // The journal entry should be the GST-exclusive value of the business portion.
+            exclusiveAmount = actualAmount - gstOnActual;
+        }
 
         if (total > 0) { // Credit
             journalEntries.push({ Account: categoryName, Code: code, Debit: 0, Credit: exclusiveAmount });
@@ -172,10 +184,10 @@ const SummarySection: React.FC<SummaryProps> = ({ data, accountTable, clientName
     const difference = totalCredit - totalDebit;
     if (Math.abs(difference) > 0.01) { 
         if (difference > 0) {
-            journalEntries.push({ Account: 'Drawings', Code: '501', Debit: difference, Credit: 0 });
+            drawingsEntry = { Account: 'Drawings', Code: '501', Debit: difference, Credit: 0 };
             totalDebit += difference;
         } else {
-            journalEntries.push({ Account: 'Drawings', Code: '501', Debit: 0, Credit: Math.abs(difference) });
+            drawingsEntry = { Account: 'Drawings', Code: '501', Debit: 0, Credit: Math.abs(difference) };
             totalCredit += Math.abs(difference);
         }
     }
@@ -185,6 +197,10 @@ const SummarySection: React.FC<SummaryProps> = ({ data, accountTable, clientName
         if (a.Debit > 0 && b.Credit > 0) return 1;
         return (a.Code || '999').localeCompare(b.Code || '999', undefined, { numeric: true });
     });
+
+    if (drawingsEntry) {
+        journalEntries.push(drawingsEntry);
+    }
 
     const csvData = journalEntries.map(entry => ({
         Account: entry.Account,
