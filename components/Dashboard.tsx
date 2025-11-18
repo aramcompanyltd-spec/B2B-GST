@@ -41,6 +41,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<ManagedUser | null>(null);
+  const [showNewTaskConfirm, setShowNewTaskConfirm] = useState(false);
+  const [showNewClientTaskConfirm, setShowNewClientTaskConfirm] = useState(false);
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
@@ -120,6 +122,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       acc[cat.name] = { gstRatio: cat.ratio };
       return acc;
     }, {} as { [key: string]: { gstRatio: number } });
+  }, [activeSettings]);
+
+  const sortedCategories = useMemo(() => {
+    if (!activeSettings?.accountTable) return [];
+    return [...activeSettings.accountTable]
+      .sort((a, b) => {
+        const codeA = a.code?.trim();
+        const codeB = b.code?.trim();
+
+        const aHasCode = !!codeA;
+        // FIX: Block-scoped variable 'bHasCode' used before its declaration. The variable was being initialized with itself.
+        const bHasCode = !!codeB;
+
+        if (!aHasCode && !bHasCode) return a.name.localeCompare(b.name);
+        if (aHasCode && !bHasCode) return -1;
+        if (!aHasCode && bHasCode) return 1;
+
+        // Both have codes, proceed with comparison
+        const isNumA = /^\d+$/.test(codeA!);
+        const isNumB = /^\d+$/.test(codeB!);
+
+        // If both are purely numeric, compare as numbers
+        if (isNumA && isNumB) {
+            return parseInt(codeA!, 10) - parseInt(codeB!, 10);
+        }
+
+        // Use localeCompare for alphanumeric or mixed cases.
+        // This will correctly sort "Item 2" before "Item 10".
+        return codeA!.localeCompare(codeB!, undefined, { numeric: true });
+      })
+      .map(cat => cat.name);
   }, [activeSettings]);
 
   const saveSettings = useCallback(async (newSettings: Partial<Settings | ManagedUser>) => {
@@ -335,9 +368,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     }
   };
 
-  const handleNewClientTask = () => {
+  const requestNewTask = () => {
+    if (transactions.length > 0) {
+      setShowNewTaskConfirm(true);
+    } else {
+      handleNewTask();
+    }
+  };
+
+  const startNewClientTask = () => {
     setTransactions([]);
     setError('');
+  };
+
+  const requestNewClientTask = () => {
+    if (transactions.length > 0) {
+      setShowNewClientTaskConfirm(true);
+    } else {
+      startNewClientTask();
+    }
   };
 
   const handleDismissOnboarding = () => {
@@ -403,8 +452,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         settings={settings} 
         onSettingsClick={() => setIsSettingsOpen(true)}
         onAccountTableClick={() => setIsAccountTableOpen(true)}
-        onNewTask={handleNewTask} 
-        onNewClientTask={handleNewClientTask}
+        onNewTask={requestNewTask} 
+        onNewClientTask={requestNewClientTask}
         showNewTaskButton={transactions.length > 0 || !!selectedClient}
         showNewClientTaskButton={showNewClientTaskButton}
         isAgentView={settings.role === 'agent'}
@@ -437,7 +486,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               <SummarySection data={processedData} accountTable={activeSettings.accountTable as AccountCategory[]} clientName={clientName} />
               <TransactionsSection 
                 data={processedData}
-                categories={Object.keys(dynamicCategories)}
+                categories={sortedCategories}
                 updateTransaction={updateTransaction}
                 setTransactions={setTransactions}
                 saveSettings={saveSettings}
@@ -480,6 +529,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           message={`Are you sure you want to delete this transaction? This action cannot be undone.`}
           onConfirm={handleConfirmDelete}
           onCancel={() => setTransactionToDelete(null)}
+        />
+      )}
+
+      {showNewTaskConfirm && (
+        <DeleteConfirmationModal
+          title={settings.role === 'agent' ? "Back to Client List?" : "Start a New Task?"}
+          message="Are you sure? The current transaction data will be cleared. This action cannot be undone and may affect your credit balance."
+          onConfirm={() => {
+            handleNewTask();
+            setShowNewTaskConfirm(false);
+          }}
+          onCancel={() => setShowNewTaskConfirm(false)}
+          confirmText={settings.role === 'agent' ? "Yes, Go Back" : "Yes, Start New"}
+          confirmColor="bg-green-600 hover:bg-green-700"
+        />
+      )}
+
+      {showNewClientTaskConfirm && (
+        <DeleteConfirmationModal
+          title="Start a New Task?"
+          message="Are you sure? The current transaction data will be cleared. This action cannot be undone and may affect your credit balance."
+          onConfirm={() => {
+            startNewClientTask();
+            setShowNewClientTaskConfirm(false);
+          }}
+          onCancel={() => setShowNewClientTaskConfirm(false)}
+          confirmText="Yes, Start New"
+          confirmColor="bg-blue-600 hover:bg-blue-700"
         />
       )}
     </div>
