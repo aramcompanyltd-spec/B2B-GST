@@ -1,3 +1,4 @@
+
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type firebase from 'firebase/compat/app';
 
@@ -23,6 +24,14 @@ export interface AccountCategory {
   isDeletable: boolean; // Core categories might not be deletable
 }
 
+export interface UploadRecord {
+    id: string;
+    timestamp: any; // Can be Firestore Timestamp or ISO string
+    fileNames: string[];
+    bank: string;
+    totalTransactions: number;
+}
+
 export interface Settings {
   profile: {
     email: string;
@@ -36,6 +45,7 @@ export interface Settings {
   credits?: number;
   role?: 'user' | 'admin' | 'agent';
   uploadCount?: number;
+  uploadHistory?: UploadRecord[];
 }
 
 export interface ManagedUser {

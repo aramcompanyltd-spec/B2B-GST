@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 // FIX: Firebase imports are no longer needed here as they are handled by the compat service.
 import { auth, db, appId } from '../services/firebase';
@@ -16,6 +17,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ initialIsLogin, onClose }) => {
   const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
     setIsLogin(initialIsLogin);
@@ -27,6 +29,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ initialIsLogin, onClose }) => {
     setError('');
     setMessage('');
     try {
+        // Set persistence based on checkbox
+        await auth.setPersistence(rememberMe ? 'local' : 'session');
+
       if (isLogin) {
         // FIX: Use v8 compat signInWithEmailAndPassword method.
         // The onAuthStateChanged listener in App.tsx will handle redirection and status checks.
@@ -120,6 +125,22 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ initialIsLogin, onClose }) => {
             className="w-full p-3 mb-4 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
+          
+          {isLogin && (
+              <div className="flex items-center mb-4">
+                  <input 
+                    type="checkbox" 
+                    id="rememberMe" 
+                    checked={rememberMe} 
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
+                      Remember me
+                  </label>
+              </div>
+          )}
+
           <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-300">
             {isLogin ? 'Sign In' : 'Start Free Trial'}
           </button>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 // FIX: Using Firebase v8 compat syntax, imports are no longer needed here.
 import { db, appId } from '../services/firebase';
@@ -5,6 +6,7 @@ import type { UserData } from '../types';
 import { DEFAULT_ACCOUNT_TABLE } from '../utils/constants';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import EditUserModal from './EditUserModal';
+import UploadHistoryModal from './UploadHistoryModal';
 
 const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -12,6 +14,7 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserData | null>(null);
+  const [viewingHistoryUser, setViewingHistoryUser] = useState<UserData | null>(null);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
@@ -33,6 +36,7 @@ const AdminDashboard: React.FC = () => {
           uploadCount: data.uploadCount !== undefined ? data.uploadCount : 0,
           mapping: data.mapping || {},
           accountTable: data.accountTable || DEFAULT_ACCOUNT_TABLE,
+          uploadHistory: data.uploadHistory || [],
         } as UserData;
       });
       setUsers(userList.sort((a, b) => a.profile.email.localeCompare(b.profile.email)));
@@ -153,7 +157,10 @@ const AdminDashboard: React.FC = () => {
                 <td className="px-6 py-4 text-gray-800 text-center font-semibold">
                   {user.uploadCount ?? 0}
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-6 py-4 text-center flex justify-center space-x-2">
+                  <button onClick={() => setViewingHistoryUser(user)} className="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100 hover:border-gray-400">
+                    History
+                  </button>
                   <button onClick={() => setEditingUser(user)} className="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded-md text-sm font-semibold hover:bg-gray-100 hover:border-gray-400">
                     Edit
                   </button>
@@ -184,6 +191,13 @@ const AdminDashboard: React.FC = () => {
           onConfirm={handleDeleteUser}
           onCancel={() => setUserToDelete(null)}
         />
+      )}
+      {viewingHistoryUser && (
+          <UploadHistoryModal 
+            history={viewingHistoryUser.uploadHistory || []} 
+            onClose={() => setViewingHistoryUser(null)} 
+            userName={viewingHistoryUser.profile.name || viewingHistoryUser.profile.email}
+          />
       )}
     </div>
   );

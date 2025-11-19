@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
 import type { FirebaseUser, Settings } from '../types';
@@ -10,6 +9,7 @@ interface HeaderProps {
   settings: Settings;
   onSettingsClick: () => void;
   onAccountTableClick: () => void;
+  onHistoryClick: () => void;
   onNewTask: () => void;
   onNewClientTask?: () => void;
   showNewTaskButton: boolean;
@@ -18,7 +18,7 @@ interface HeaderProps {
   clientName?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAccountTableClick, onNewTask, onNewClientTask, showNewTaskButton, showNewClientTaskButton, isAgentView, clientName }) => {
+const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAccountTableClick, onHistoryClick, onNewTask, onNewClientTask, showNewTaskButton, showNewClientTaskButton, isAgentView, clientName }) => {
   const greeting = clientName ? `Client: ${clientName}` : `Welcome, ${user.email || 'Guest'}`;
 
   return (
@@ -58,6 +58,9 @@ const Header: React.FC<HeaderProps> = ({ user, settings, onSettingsClick, onAcco
                 Account table
             </button>
         )}
+        <button onClick={onHistoryClick} className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 font-medium">
+          History
+        </button>
         <button onClick={onSettingsClick} className="text-sm bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 font-medium">
           Settings
         </button>

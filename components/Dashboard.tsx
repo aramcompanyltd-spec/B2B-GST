@@ -1,8 +1,8 @@
 
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 // FIX: Using Firebase v8 compat syntax to resolve module errors.
-import type { FirebaseUser, ManagedUser, AccountCategory } from '../types';
+import firebase from 'firebase/compat/app';
+import type { FirebaseUser, ManagedUser, AccountCategory, UploadRecord } from '../types';
 import { auth, db, appId } from '../services/firebase';
 import type { Transaction, Settings, FileSlot } from '../types';
 import { CLASSIFICATION_KEYWORDS, BANK_HEADERS, DEFAULT_ACCOUNT_TABLE } from '../utils/constants';
@@ -22,6 +22,7 @@ import OnboardingGuide from './OnboardingGuide';
 import CreditsDepletedModal from './CreditsDepletedModal';
 import AgentDashboard from './AgentDashboard';
 import AccountTableModal from './AccountTableModal';
+import UploadHistoryModal from './UploadHistoryModal';
 
 
 interface DashboardProps {
@@ -35,6 +36,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [error, setError] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAccountTableOpen, setIsAccountTableOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState('calculator');
@@ -72,6 +74,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             credits: data.credits,
             role: data.role || 'user',
             uploadCount: data.uploadCount || 0,
+            uploadHistory: data.uploadHistory || [],
         });
 
         setIsAdmin(data.role === 'admin');
@@ -85,6 +88,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             uploadCount: 0,
             mapping: {},
             accountTable: DEFAULT_ACCOUNT_TABLE,
+            uploadHistory: [],
         };
         try {
             await userRef.set(defaultSettings);
@@ -132,7 +136,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         const codeB = b.code?.trim();
 
         const aHasCode = !!codeA;
-        // FIX: Block-scoped variable 'bHasCode' used before its declaration. The variable was being initialized with itself.
         const bHasCode = !!codeB;
 
         if (!aHasCode && !bHasCode) return a.name.localeCompare(b.name);
@@ -302,17 +305,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
               const currentCredits = userData.credits ?? 0;
               const newCreditCount = !isAdmin ? Math.max(0, currentCredits - 1) : currentCredits;
               
+              // Store history in the user document array instead of subcollection to avoid permission issues
+              const currentHistory = (userData.uploadHistory || []) as UploadRecord[];
+              const newRecord: UploadRecord = {
+                  id: crypto.randomUUID(),
+                  timestamp: new Date().toISOString(),
+                  fileNames: filesToProcess.map(f => f.file?.name || 'Unknown').filter(Boolean),
+                  bank: filesToProcess.map(f => f.bank || '?').join(', '),
+                  totalTransactions: allTransactions.length,
+              };
+              
+              // Prepend new record
+              const updatedHistory = [newRecord, ...currentHistory];
+
               transaction.update(userRef, {
                 uploadCount: newUploadCount,
                 credits: newCreditCount,
+                uploadHistory: updatedHistory
               });
 
-              return { newUploadCount, newCreditCount };
+              return { newUploadCount, newCreditCount, updatedHistory };
             })
-            .then((newCounts) => {
-              if (newCounts) {
+            .then((res) => {
+              if (res) {
                 // Update local state only after the transaction is successfully committed.
-                setSettings(s => s ? { ...s, uploadCount: newCounts.newUploadCount, credits: newCounts.newCreditCount } : null);
+                setSettings(s => s ? { 
+                    ...s, 
+                    uploadCount: res.newUploadCount, 
+                    credits: res.newCreditCount,
+                    uploadHistory: res.updatedHistory
+                } : null);
               }
             })
             .catch(err => {
@@ -418,7 +440,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   if (settings.role === 'agent' && !selectedClient) {
     return (
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
-        <Header user={user} settings={settings} onSettingsClick={() => setIsSettingsOpen(true)} onAccountTableClick={() => setIsAccountTableOpen(true)} onNewTask={handleNewTask} showNewTaskButton={false} />
+        <Header user={user} settings={settings} onSettingsClick={() => setIsSettingsOpen(true)} onAccountTableClick={() => setIsAccountTableOpen(true)} onHistoryClick={() => setIsHistoryOpen(true)} onNewTask={handleNewTask} showNewTaskButton={false} />
         <AgentDashboard user={user} onClientSelect={handleClientSelect} settings={settings} />
 
         {isSettingsOpen && (
@@ -437,6 +459,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             onClose={() => setIsAccountTableOpen(false)}
           />
         )}
+         {isHistoryOpen && (
+          <UploadHistoryModal 
+            history={settings.uploadHistory || []} 
+            onClose={() => setIsHistoryOpen(false)} 
+          />
+        )}
       </div>
     )
   }
@@ -452,6 +480,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         settings={settings} 
         onSettingsClick={() => setIsSettingsOpen(true)}
         onAccountTableClick={() => setIsAccountTableOpen(true)}
+        onHistoryClick={() => setIsHistoryOpen(true)}
         onNewTask={requestNewTask} 
         onNewClientTask={requestNewClientTask}
         showNewTaskButton={transactions.length > 0 || !!selectedClient}
@@ -518,6 +547,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           agentDefaultTable={settings.role === 'agent' && selectedClient ? settings.accountTable : undefined}
         />
       )}
+
+       {isHistoryOpen && (
+          <UploadHistoryModal 
+            history={settings.uploadHistory || []} 
+            onClose={() => setIsHistoryOpen(false)} 
+          />
+        )}
 
       {showCreditsModal && (
         <CreditsDepletedModal onClose={() => setShowCreditsModal(false)} />
